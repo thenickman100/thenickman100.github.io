@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<link rel="stylesheet" href="./files/stylesheet.css" />
+	<link rel="stylesheet" href="./files/fontawesome-free-6.6.0-web/css/all.css">
+	<meta charset="UTF-8" />
+	<title>Nick's Bar Guide</title>
+</head>
+
+<body>
+	<div class="controls">
+
+		<!-- ALPHA //-->
+		<div class="force alpha">
+			<p><label><input type="checkbox" checked onchange="forceProperties.alpha.enabled = this.checked; initializeForces();"> alpha</label> Simulation activity</p>
+			<div class="alpha-bar" onclick="updateAll(0);">
+				<div id="alpha-value"></div>
+			</div>
+		</div>
+
+		<!-- COLLIDE //-->
+		<div class="force">
+			<p><label><input type="checkbox" checked onchange="forceProperties.collide.enabled = this.checked; updateForces();"> collide</label> Prevents nodes from overlapping</p>
+			<label title="tbd">
+				strength
+				<output id="collide-strength">1</output>
+				<input type="range" min="0" max="1" value="1" step="0.1" oninput="d3.select('#collide-strength').text(value); forceProperties.collide.strength=parseFloat(value); updateForces();">
+			</label>
+			<label title="Size of node collision box">
+				collision radius (rel)
+				<output id="collide-rel-radius">1</output>
+				<input type="range" min="0" max="5" value="1" step="0.1" oninput="d3.select('#collide-rel-radius').text(value); forceProperties.collide.relativeRadius=parseFloat(value); updateForces();">
+			</label>
+			<label title="Higher values increase rigidity of the nodes (WARNING: high values are computationally expensive)">
+				iterations
+				<output id="collide-iterations">6</output>
+				<input type="range" min="1" max="10" value="6" step="1" oninput="d3.select('#collide-iterations').text(value); forceProperties.collide.iterations=parseFloat(value); updateForces();">
+			</label>
+		</div>
+
+		<!-- CHARGE //-->
+		<div class="force">
+			<p><label><input type="checkbox" checked onchange="forceProperties.charge.enabled = this.checked; updateForces();"> charge</label> Attracts (+) or repels (-) nodes to/from each other.</p>
+			<label title="tbd">
+				algorithm
+				<output id="algorithm">default</output>
+				<input type="range" min="0" max="2" step="1" value="0"
+					oninput="d3.select('#algorithm').text(['default', 'sampled', 'reuse'][value]); forceProperties.charge.algorithm=['default', 'sampled', 'reuse'][value]; initializeForces();">
+			</label>
+			<label title="Negative strength repels nodes. Positive strength attracts nodes.">
+				strength
+				<output id="charge-strength">-200</output>
+				<input type="range" min="-500" max="50" value="-200" step="25" oninput="d3.select('#charge-strength').text(value); forceProperties.charge.strength=parseFloat(value); updateForces();">
+			</label>
+			<label title="Minimum distance where force is applied">
+				distanceMin
+				<output id="charge-min-distance">0</output>
+				<input type="range" min="0" max="50" value="0" step="0.1" oninput="d3.select('#charge-min-distance').text(value); forceProperties.charge.distanceMin=parseFloat(value); updateForces();">
+			</label>
+			<label title="Maximum distance where force is applied">
+				distanceMax
+				<output id="charge-max-distance">350</output>
+				<input type="range" min="0" max="500" value="350" step="5" oninput="d3.select('#charge-max-distance').text(value); forceProperties.charge.distanceMax=parseFloat(value); updateForces();">
+			</label>
+		</div>
+
+		<!-- LINK //-->
+		<div class="force">
+			<p><label><input type="checkbox" checked onchange="forceProperties.link.enabled = this.checked; updateAll(0);"> link</label> Sets link length</p>
+			<label title="tbd">
+				strength
+				<output id="link-strength">0.9</output>
+				<input type="range" min="0" max="1" value="0.9" step="0.1" oninput="d3.select('#link-strength').text(value); forceProperties.link.strength=parseFloat(value); updateForces();">
+			</label>
+			<label title="The force will push/pull nodes to make links this long">
+				distance
+				<output id="link-distance">45</output>
+				<input type="range" min="0" max="500" value="45" step="5" oninput="d3.select('#link-distance').text(value); forceProperties.link.distance=parseFloat(value); updateForces();">
+			</label>
+			<label title="Higher values increase rigidity of the links (WARNING: high values are computationally expensive)">
+				iterations
+				<output id="link-iterations">1</output>
+				<input type="range" min="1" max="10" value="1" step="1" oninput="d3.select('#link-iterations').text(value); forceProperties.link.iterations=parseFloat(value); updateForces();">
+			</label>
+		</div>
+
+		<!-- GRAPH DISPLAY //-->
+		<div class="force">
+			<p><label>graph display</label> customize graph visuals</p>
+			<label title="tbd">
+				node radius
+				<output id="node-radius">10</output>
+				<input type="range" min="0" max="100" value="10" step="1" oninput="d3.select('#node-radius').text(value); displayProperties.node.radius=parseFloat(value); updateAll(0);">
+			</label>
+			<label title="tbd">
+				edge width
+				<output id="edge-width">3.5</output>
+				<input type="range" min="0" max="10" value="3.5" step="0.5" oninput="d3.select('#edge-width').text(value); displayProperties.edge.width=parseFloat(value); updateDisplay(0);">
+			</label>
+			<label title="tbd">
+			<label title="tbd">
+				label size
+				<output id="node-text-size">12</output>
+				<input type="range" min="5" max="40" value="12" step="1" oninput="d3.select('#node-text-size').text(value); displayProperties.node.text_size=parseFloat(value); updateDisplay(0);">
+			</label>
+			<label title="tbd">
+				label x offset
+				<output id="node-text-x-offset">12</output>
+				<input type="range" min="-30" max="30" value="12" step="1" oninput="d3.select('#node-text-x-offset').text(value); displayProperties.node.x_offset=parseFloat(value); updateDisplay(0);">
+			</label>
+			<label title="tbd">
+				label y offset
+				<output id="node-text-y-offset">12</output>
+				<input type="range" min="-30" max="30" value="12" step="1" oninput="d3.select('#node-text-y-offset').text(value); displayProperties.node.y_offset=parseFloat(value); updateDisplay(0);">
+			</label>
+			<label title="tbd">
+				label alignment
+				<output id="node-text-alignment">left</output>
+				<input type="range" min="0" max="2" step="1" value="2" oninput="d3.select('#node-text-alignment').text(['right', 'middle', 'left'][value]); displayProperties.node.justify=['end', 'middle', 'start'][value]; updateDisplay(0);">
+			</label>
+		</div>
+
+		<!-- LEGEND DISPLAY //-->
+		<div class="force">
+			<p><label>legend display</label> customize legend visuals</p>
+			<label title="tbd">
+				right padding
+				<output id="legend-right">20</output>
+				<input type="range" min="0" max="500" value="20" step="10" oninput="d3.select('#legend-right').text(value); displayProperties.legend.padding_right=parseFloat(value); updateLegend();">
+			</label>
+			<label title="tbd">
+				top padding
+				<output id="legend-top">20</output>
+				<input type="range" min="0" max="500" value="20" step="10" oninput="d3.select('#legend-top').text(value); displayProperties.legend.padding_top=parseFloat(value); updateLegend();">
+			</label>
+			<label title="tbd">
+				text gap
+				<output id="legend-text-gap">10</output>
+				<input type="range" min="0" max="30" value="10" step="1" oninput="d3.select('#legend-text-gap').text(value); displayProperties.legend.text_gap=parseFloat(value); updateLegend();">
+			</label>
+			<label title="tbd">
+				line spacing
+				<output id="legend-line-spacing">25</output>
+				<input type="range" min="0" max="100" value="25" step="5" oninput="d3.select('#legend-line-spacing').text(value); displayProperties.legend.line_spacing=parseFloat(value); updateLegend();">
+			</label>
+			<label title="tbd">
+				text size
+				<output id="legend-text-size">12</output>
+				<input type="range" min="5" max="40" value="12" step="1" oninput="d3.select('#legend-text-size').text(value); displayProperties.legend.text_size=parseFloat(value); updateLegend();">
+			</label>
+		</div>
+
+	</div>
+	<div id="svg-wrapper">
+		<div id="svg-container">
+			<svg class="networkx"></svg>
+		</div>
+	</div>
+	<script src="./files/jquery.v3.7.1.js"></script>
+	<script src="./files/d3.v7.9.0.js"></script>
+	<script src="./files/d3-selection-multi.v1.js"></script>
+	<script src="./files/d3-force-reuse.v1.0.1.js"></script>
+	<script src="./files/d3-force-sampled.v1.0.1.js"></script>
+	<script src="./files/jsnetworkx-dev.v0.3.4.js"></script>
+	<script src="./scripts/color_palettes.js"></script>
+	<script src="./recipes/ingredients.js"></script>
+	<script src="./recipes/recipes.js"></script>
+	<script src="./scripts/network_manipulations.js"></script>
+	<script src="./scripts/network_calculations.js"></script>
+	<script src="./scripts/node_filtering.js"></script>
+	<script src="./scripts/display_graph.js"></script>
+</body>
+
+</html>

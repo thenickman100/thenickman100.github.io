@@ -1,0 +1,190 @@
+html {
+	width: 100%;
+}
+
+body {
+	width: 100%;
+	margin: 0;
+	padding: 0;
+	display: flex;
+	font-family: sans-serif;
+	font-size: 75%;
+}
+
+.node circle {
+	cursor: pointer;
+}
+
+.legend {
+	cursor: default;
+}
+
+.controls {
+	flex-basis: 200px;
+	padding: 0 5px;
+}
+
+.controls .force {
+	background-color: #eee;
+	border-radius: 3px;
+	padding: 5px;
+	margin: 5px 0;
+}
+
+.controls .force p label {
+	margin-right: .5em;
+	font-size: 120%;
+	font-weight: bold;
+}
+
+.controls .force p {
+	margin-top: 0;
+}
+
+.controls .force label {
+	display: inline-block;
+}
+
+.controls input[type="checkbox"] {
+	transform: scale(1.2, 1.2);
+}
+
+.controls input[type="range"] {
+	margin: 0 5% 0.5em 5%;
+	width: 90%;
+}
+
+.controls .alpha p {
+	margin-bottom: .25em;
+}
+
+.controls .alpha .alpha-bar {
+	height: .5em;
+	border: 1px #777 solid;
+	border-radius: 2px;
+	padding: 1px;
+	display: flex;
+}
+
+.controls .alpha .alpha-bar #alpha-value {
+	background-color: #555;
+	border-radius: 1px;
+	flex-basis: 100%
+}
+
+.controls .alpha .alpha-bar:hover {
+	border-width: 2px;
+	margin: -1px;
+}
+
+.controls .alpha .alpha-bar:active #alpha_value {
+	background-color: #222
+}
+
+.networkx {
+	flex-basis: 100%;
+	min-width: 200px;
+}
+
+.nodes circle {
+	pointer-events: all;
+}
+
+.node > text {
+	font-size: 12px;
+	fill: black;
+	cursor: default;
+	pointer-events: none;
+}
+
+#tooltip,
+.graph-button {
+	position: absolute;
+	padding: 10px;
+	background-color: white;
+	box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+}
+
+#tooltip {
+	top: 10px;
+	left: 100px;
+	border-radius: 10px;
+}
+
+.graph-button {
+	background-color: white;
+	left: 5px;
+	width: 15px;
+	height: 15px;
+	border-radius: 20px;
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.graph-button:hover {
+	background-color: #ddd;
+}
+
+.graph-button.active {
+	background-color: #bbb;
+}
+
+.doubleRecipeButton {
+	top: 100px;
+}
+
+.singleRecipeButton {
+	top: 55px;
+}
+
+.drinkButton {
+	top: 10px;
+}
+
+.ingredientsButton {
+	top: 10px;
+	left: 50px;
+}
+
+.hidden {
+	display: none;
+}
+
+table {
+	border-collapse: collapse;
+}
+
+.ingredient {
+	padding-left: 10px;
+}
+
+.measure {
+	padding-right: 4px;
+	border-right: 1px solid black;
+	text-align: right;
+}
+
+.recipe-title {
+	font-weight: bold;
+	display: block;
+	border-bottom: 3px solid #008055;
+	margin-bottom: 2px;
+}
+
+#svg-wrapper {
+	width: 100%;
+	height: auto;
+}
+
+#svg-container {
+	position: absolute;
+	width: 100%;
+	height: 100%;
+}
+
+svg {
+	width: 100%;
+	height: 100%;
+}
