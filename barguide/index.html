@@ -2,6 +2,7 @@
 <html>
 
 <head>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<link rel="stylesheet" href="./files/stylesheet.css" />
 	<link rel="stylesheet" href="./files/fontawesome-free-6.6.0-web/css/all.css">
 	<meta charset="UTF-8" />
@@ -120,8 +121,8 @@
 				<input type="range" min="0" max="2" step="1" value="2" oninput="d3.select('#node-text-alignment').text(['right', 'middle', 'left'][value]); displayProperties.node.justify=['end', 'middle', 'start'][value]; updateDisplay(0);">
 			</label>
 		</div>
-<!--
-		<\!-- LEGEND DISPLAY //--\>
+
+		<!-- LEGEND DISPLAY //-->
 		<div class="force">
 			<p><label>legend display</label> customize legend visuals</p>
 			<label title="tbd">
@@ -150,7 +151,7 @@
 				<input type="range" min="5" max="40" value="12" step="1" oninput="d3.select('#legend-text-size').text(value); displayProperties.legend.text_size=parseFloat(value); updateLegend();">
 			</label>
 		</div>
-//-->
+
 	</div>
 	<div id="svg-wrapper">
 		<div id="svg-container">
