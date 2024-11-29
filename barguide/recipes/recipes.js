@@ -502,5 +502,29 @@ let drinks = {
 				amount_unit: [1, "unit"]
 			}
 		]
-	}
+	},
+  recipe_20: {
+    id: "recipe_20",
+    name: "The Dick Mitchell",
+    color: "Brown",
+    source: "Nick",
+    ingredients: [
+      {
+        node: bourbon,
+        amount_unit: [2, "oz"],
+      },
+      {
+        node: drambuie,
+        amount_unit: [0.5, "oz"],
+      },
+      {
+        node: old_fashion,
+        amount_unit: [2, "dash"],
+      },
+      {
+        node: lemon_peel,
+        amount_unit: [1, "unit"],
+      },
+    ],
+  },
 };
