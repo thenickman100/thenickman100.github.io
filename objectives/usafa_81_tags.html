@@ -1,0 +1,269 @@
+
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font-sans); }
+.container { padding: 1rem 0; }
+.outcome-block { margin-bottom: 1.5rem; border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); overflow: hidden; }
+.outcome-header { padding: 0.75rem 1rem; display: flex; align-items: flex-start; gap: 10px; cursor: pointer; user-select: none; }
+.outcome-header:hover { background: var(--color-background-secondary); }
+.outcome-label { font-size: 12px; font-weight: 500; padding: 2px 8px; border-radius: var(--border-radius-md); min-width: 28px; text-align: center; flex-shrink: 0; margin-top: 1px; }
+.outcome-title { font-size: 14px; font-weight: 500; color: var(--color-text-primary); flex: 1; }
+.outcome-desc { font-size: 12px; color: var(--color-text-secondary); margin-top: 2px; }
+.chevron { font-size: 14px; color: var(--color-text-secondary); transition: transform 0.2s; flex-shrink: 0; margin-top: 2px; }
+.chevron.open { transform: rotate(180deg); }
+.tags-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 6px; padding: 0.75rem 1rem 1rem; border-top: 0.5px solid var(--color-border-tertiary); }
+.tag { padding: 6px 10px; border-radius: var(--border-radius-md); border: 0.5px solid; }
+.tag-name { font-size: 12px; font-weight: 500; }
+.tag-desc { font-size: 11px; margin-top: 2px; line-height: 1.4; }
+.search-bar { margin-bottom: 1rem; display: flex; gap: 8px; align-items: center; }
+.search-bar input { flex: 1; font-size: 13px; padding: 6px 10px; border-radius: var(--border-radius-md); border: 0.5px solid var(--color-border-secondary); background: var(--color-background-primary); color: var(--color-text-primary); }
+.count-badge { font-size: 12px; color: var(--color-text-secondary); white-space: nowrap; }
+.expand-all { font-size: 12px; background: none; border: 0.5px solid var(--color-border-secondary); border-radius: var(--border-radius-md); padding: 4px 10px; cursor: pointer; color: var(--color-text-secondary); }
+</style>
+
+<div class="container">
+<h2 class="sr-only">USAFA 81 course objective tags organized under 9 institutional outcomes</h2>
+
+<div class="search-bar">
+  <i class="ti ti-search" style="color:var(--color-text-secondary);font-size:16px;" aria-hidden="true"></i>
+  <input type="text" id="search" placeholder="Filter tags..." oninput="filterTags(this.value)" />
+  <span class="count-badge" id="count">81 tags</span>
+  <button class="expand-all" onclick="toggleAll()">Expand all</button>
+</div>
+
+<div id="outcomes"></div>
+</div>
+
+<script>
+const data = [
+  {
+    id:"a", label:"A", title:"Critical Thinking", short:"Self-aware, informed, reflective reasoning",
+    color:"c-purple",
+    tags:[
+      {name:"Assumption identification", desc:"Recognizing unstated premises"},
+      {name:"Evidence evaluation", desc:"Weighing quality and relevance of data"},
+      {name:"Logical structure analysis", desc:"Identifying valid vs. fallacious arguments"},
+      {name:"Perspective-taking", desc:"Considering alternative viewpoints"},
+      {name:"Metacognitive awareness", desc:"Monitoring one's own reasoning process"},
+      {name:"Uncertainty tolerance", desc:"Operating effectively with incomplete info"},
+      {name:"Inference calibration", desc:"Drawing appropriately scoped conclusions"},
+      {name:"Bias recognition", desc:"Identifying cognitive and systemic biases"},
+      {name:"Decision framing", desc:"Structuring the problem before solving it"},
+    ]
+  },
+  {
+    id:"b", label:"B", title:"Clear Communication", short:"Written or oral expression of ideas",
+    color:"c-teal",
+    tags:[
+      {name:"Audience adaptation", desc:"Tailoring message to the receiver"},
+      {name:"Logical organization", desc:"Structuring content for clarity"},
+      {name:"Precision of language", desc:"Using accurate, unambiguous terms"},
+      {name:"Oral delivery", desc:"Speaking clearly and confidently"},
+      {name:"Written mechanics", desc:"Grammar, syntax, and style conventions"},
+      {name:"Visual communication", desc:"Using graphics, charts, and diagrams effectively"},
+      {name:"Active listening", desc:"Comprehending and responding to others"},
+      {name:"Argument construction", desc:"Building claims with evidence and reasoning"},
+      {name:"Feedback integration", desc:"Revising based on received critique"},
+    ]
+  },
+  {
+    id:"c", label:"C", title:"Engineering Problem-Solving", short:"Scientific and mathematical application",
+    color:"c-blue",
+    tags:[
+      {name:"Requirements analysis", desc:"Defining constraints and objectives"},
+      {name:"Mathematical modeling", desc:"Translating problems into formal models"},
+      {name:"Systems thinking", desc:"Understanding component interactions"},
+      {name:"Design iteration", desc:"Refining solutions through cycles"},
+      {name:"Quantitative estimation", desc:"Making defensible numerical approximations"},
+      {name:"Technology awareness", desc:"Applying current tools and state of practice"},
+      {name:"Trade-off analysis", desc:"Comparing competing solution attributes"},
+      {name:"Failure mode analysis", desc:"Anticipating and mitigating failures"},
+      {name:"Solution validation", desc:"Verifying outputs against requirements"},
+    ]
+  },
+  {
+    id:"d", label:"D", title:"Scientific Reasoning", short:"Scientific habits of mind and principles",
+    color:"c-green",
+    tags:[
+      {name:"Hypothesis formation", desc:"Generating testable, falsifiable claims"},
+      {name:"Experimental design", desc:"Controlling variables and measuring outcomes"},
+      {name:"Data interpretation", desc:"Drawing meaning from empirical results"},
+      {name:"Nature of science", desc:"Understanding science as a human endeavor"},
+      {name:"Replication and reproducibility", desc:"Appreciating independent verification"},
+      {name:"Quantitative reasoning", desc:"Using numerical methods for analysis"},
+      {name:"Model limitations", desc:"Recognizing scope and validity of models"},
+      {name:"Scientific skepticism", desc:"Questioning claims without evidence"},
+      {name:"Interdisciplinary transfer", desc:"Applying scientific thinking across fields"},
+    ]
+  },
+  {
+    id:"e", label:"E", title:"Ethics and Human Dignity", short:"Ethical judgment and respect for persons",
+    color:"c-coral",
+    tags:[
+      {name:"Ethical theory application", desc:"Applying frameworks (utilitarian, deontological, etc.)"},
+      {name:"Moral reasoning", desc:"Working through ethical dilemmas"},
+      {name:"Stakeholder identification", desc:"Recognizing all affected parties"},
+      {name:"Values clarification", desc:"Articulating personal and professional values"},
+      {name:"Rights and duties", desc:"Understanding obligations to persons"},
+      {name:"Integrity and honesty", desc:"Acting consistently with stated values"},
+      {name:"Moral courage", desc:"Acting ethically under social pressure"},
+      {name:"Cross-cultural ethics", desc:"Navigating differing moral norms"},
+      {name:"Professional responsibility", desc:"Ethics specific to a field or role"},
+    ]
+  },
+  {
+    id:"f", label:"F", title:"Human Condition & Societies", short:"Culture, identity, and social interaction",
+    color:"c-pink",
+    tags:[
+      {name:"Cultural literacy", desc:"Understanding practices and beliefs of cultures"},
+      {name:"Historical context", desc:"Situating events and ideas in time"},
+      {name:"Social structures", desc:"Analyzing institutions and power dynamics"},
+      {name:"Identity and diversity", desc:"Examining how identity shapes experience"},
+      {name:"Global interconnectedness", desc:"Tracing cross-border linkages and influences"},
+      {name:"Human nature inquiry", desc:"Exploring what it means to be human"},
+      {name:"Socio-economic analysis", desc:"Examining material conditions and inequality"},
+      {name:"Narrative and meaning", desc:"Using story and symbol to understand societies"},
+      {name:"Change and continuity", desc:"Examining how societies evolve over time"},
+    ]
+  },
+  {
+    id:"g", label:"G", title:"National Security", short:"U.S. values and global strategic context",
+    color:"c-amber",
+    tags:[
+      {name:"Strategic thinking", desc:"Analyzing long-term national interests"},
+      {name:"Geopolitical analysis", desc:"Mapping state and non-state actors"},
+      {name:"Civil-military relations", desc:"Understanding democratic oversight of force"},
+      {name:"Threat assessment", desc:"Evaluating credibility and severity of risks"},
+      {name:"Law of armed conflict", desc:"Applying legal frameworks to military action"},
+      {name:"Intelligence literacy", desc:"Understanding collection and analysis of information"},
+      {name:"Alliance and coalition dynamics", desc:"Working within multinational structures"},
+      {name:"Deterrence theory", desc:"Understanding coercive and assurance strategies"},
+      {name:"Resource and logistics reasoning", desc:"Connecting strategy to sustainment"},
+    ]
+  },
+  {
+    id:"h", label:"H", title:"Warrior Ethos", short:"Airmen and Guardian character and service",
+    color:"c-red",
+    tags:[
+      {name:"Resilience under adversity", desc:"Maintaining performance under stress"},
+      {name:"Commitment to service", desc:"Prioritizing mission and team over self"},
+      {name:"Oath and obligation", desc:"Understanding the meaning of sworn duty"},
+      {name:"Physical and mental discipline", desc:"Developing self-mastery habits"},
+      {name:"Courage (moral and physical)", desc:"Acting rightly despite risk or fear"},
+      {name:"Core values internalization", desc:"Embodying integrity, service, excellence"},
+      {name:"Esprit de corps", desc:"Building and sustaining unit cohesion"},
+      {name:"Professional identity", desc:"Developing an Airman/Guardian self-concept"},
+      {name:"Accountability", desc:"Owning outcomes and taking responsibility"},
+    ]
+  },
+  {
+    id:"i", label:"I", title:"Leadership & Organizational Management", short:"Character-based leadership at all levels",
+    color:"c-gray",
+    tags:[
+      {name:"Self-leadership", desc:"Managing personal growth and goals"},
+      {name:"Interpersonal influence", desc:"Building trust and motivating individuals"},
+      {name:"Team dynamics", desc:"Facilitating effective group performance"},
+      {name:"Organizational design", desc:"Structuring roles, processes, and authority"},
+      {name:"Mission command", desc:"Empowering subordinates toward intent"},
+      {name:"Conflict resolution", desc:"Navigating disagreement constructively"},
+      {name:"Change management", desc:"Leading adaptation in complex environments"},
+      {name:"Resource stewardship", desc:"Managing personnel, time, and materiel"},
+      {name:"Strategic communication", desc:"Aligning messages with organizational goals"},
+    ]
+  },
+];
+
+const colorMap = {
+  "c-purple": {bg:"#EEEDFE", border:"#534AB7", text:"#3C3489", tagBg:"#EEEDFE", tagBorder:"#AFA9EC", tagText:"#3C3489", tagSub:"#534AB7"},
+  "c-teal":   {bg:"#E1F5EE", border:"#0F6E56", text:"#085041", tagBg:"#E1F5EE", tagBorder:"#5DCAA5", tagText:"#085041", tagSub:"#0F6E56"},
+  "c-blue":   {bg:"#E6F1FB", border:"#185FA5", text:"#0C447C", tagBg:"#E6F1FB", tagBorder:"#85B7EB", tagText:"#0C447C", tagSub:"#185FA5"},
+  "c-green":  {bg:"#EAF3DE", border:"#3B6D11", text:"#27500A", tagBg:"#EAF3DE", tagBorder:"#97C459", tagText:"#27500A", tagSub:"#3B6D11"},
+  "c-coral":  {bg:"#FAECE7", border:"#993C1D", text:"#712B13", tagBg:"#FAECE7", tagBorder:"#F0997B", tagText:"#712B13", tagSub:"#993C1D"},
+  "c-pink":   {bg:"#FBEAF0", border:"#993556", text:"#72243E", tagBg:"#FBEAF0", tagBorder:"#ED93B1", tagText:"#72243E", tagSub:"#993556"},
+  "c-amber":  {bg:"#FAEEDA", border:"#854F0B", text:"#633806", tagBg:"#FAEEDA", tagBorder:"#EF9F27", tagText:"#633806", tagSub:"#854F0B"},
+  "c-red":    {bg:"#FCEBEB", border:"#A32D2D", text:"#791F1F", tagBg:"#FCEBEB", tagBorder:"#F09595", tagText:"#791F1F", tagSub:"#A32D2D"},
+  "c-gray":   {bg:"#F1EFE8", border:"#5F5E5A", text:"#444441", tagBg:"#F1EFE8", tagBorder:"#B4B2A9", tagText:"#444441", tagSub:"#5F5E5A"},
+};
+
+let expandedAll = false;
+const expanded = {};
+
+function render(filter="") {
+  const container = document.getElementById("outcomes");
+  const fl = filter.toLowerCase();
+  let totalVisible = 0;
+  container.innerHTML = "";
+
+  data.forEach(outcome => {
+    const visibleTags = outcome.tags.filter(t =>
+      !fl || t.name.toLowerCase().includes(fl) || t.desc.toLowerCase().includes(fl) || outcome.title.toLowerCase().includes(fl)
+    );
+    if (visibleTags.length === 0 && fl) return;
+    totalVisible += visibleTags.length;
+
+    const c = colorMap[outcome.color];
+    const isOpen = expanded[outcome.id] !== false && (fl || expanded[outcome.id] === true || !fl);
+    const tagsToShow = fl ? visibleTags : outcome.tags;
+
+    const block = document.createElement("div");
+    block.className = "outcome-block";
+
+    const header = document.createElement("div");
+    header.className = "outcome-header";
+    header.innerHTML = `
+      <span class="outcome-label" style="background:${c.bg};color:${c.text};border:0.5px solid ${c.border};">${outcome.label}</span>
+      <div style="flex:1">
+        <div class="outcome-title">${outcome.title}</div>
+        <div class="outcome-desc">${outcome.short}</div>
+      </div>
+      <i class="ti ti-chevron-down chevron${isOpen||fl?'' :''}" id="chev-${outcome.id}" aria-hidden="true"></i>
+    `;
+    header.onclick = () => toggleOutcome(outcome.id);
+
+    const grid = document.createElement("div");
+    grid.className = "tags-grid";
+    grid.id = `grid-${outcome.id}`;
+    grid.style.display = (isOpen || fl) ? "grid" : "none";
+
+    tagsToShow.forEach(tag => {
+      const t = document.createElement("div");
+      t.className = "tag";
+      t.style.cssText = `background:${c.tagBg};border-color:${c.tagBorder};`;
+      t.innerHTML = `<div class="tag-name" style="color:${c.tagText};">${tag.name}</div><div class="tag-desc" style="color:${c.tagSub};">${tag.desc}</div>`;
+      grid.appendChild(t);
+    });
+
+    block.appendChild(header);
+    block.appendChild(grid);
+    container.appendChild(block);
+  });
+
+  document.getElementById("count").textContent = fl ? `${totalVisible} tags` : "81 tags";
+}
+
+function toggleOutcome(id) {
+  const grid = document.getElementById(`grid-${id}`);
+  const chev = document.getElementById(`chev-${id}`);
+  if (!grid) return;
+  const isOpen = grid.style.display !== "none";
+  grid.style.display = isOpen ? "none" : "grid";
+  expanded[id] = !isOpen;
+  if (chev) chev.classList.toggle("open", !isOpen);
+}
+
+function toggleAll() {
+  expandedAll = !expandedAll;
+  document.querySelector(".expand-all").textContent = expandedAll ? "Collapse all" : "Expand all";
+  data.forEach(o => {
+    expanded[o.id] = expandedAll;
+    const grid = document.getElementById(`grid-${o.id}`);
+    const chev = document.getElementById(`chev-${o.id}`);
+    if (grid) grid.style.display = expandedAll ? "grid" : "none";
+    if (chev) chev.classList.toggle("open", expandedAll);
+  });
+}
+
+function filterTags(val) { render(val); }
+
+render();
+</script>

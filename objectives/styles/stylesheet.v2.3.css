@@ -1,0 +1,553 @@
+/* stylesheet.css  v2.3 — sidebar toggle, mobile overlay layout */
+html, body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    display: flex;
+    font-family: sans-serif;
+    font-size: 75%;
+    overflow: hidden;
+}
+
+/* ── SIDEBAR ──────────────────────────────────────── */
+.controls {
+    flex: 0 0 270px;
+    overflow-y: auto;
+    padding: 0 5px 20px;
+    height: 100vh;
+    box-sizing: border-box;
+    background: #f7f7f7;
+    border-right: 1px solid #ddd;
+}
+
+.controls .force {
+    background-color: #eee;
+    border-radius: 4px;
+    padding: 0;
+    margin: 5px 0;
+    overflow: hidden;
+}
+
+/* ── COLLAPSIBLE SECTION HEADER ───────────────────── */
+.section-header {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-wrap: wrap;
+    padding: 6px 8px;
+    cursor: pointer;
+    user-select: none;
+    background-color: #eee;
+    border-radius: 4px;
+}
+.section-header:hover {
+    background-color: #e3e3e3;
+}
+.section-header label {
+    margin-right: .4em;
+    font-size: 115%;
+    font-weight: bold;
+    cursor: pointer;
+}
+.section-header .section-subtitle {
+    flex: 1;
+    color: #555;
+}
+.section-toggle-icon {
+    font-size: 10px;
+    color: #888;
+    transition: transform 0.2s;
+    flex-shrink: 0;
+    margin-left: auto;
+}
+.section-header.collapsed .section-toggle-icon {
+    transform: rotate(-90deg);
+}
+
+.section-body {
+    padding: 2px 8px 8px;
+    background-color: #eee;
+}
+.section-body.hidden {
+    display: none;
+}
+
+/* Sub-section within a collapsed group */
+.sub-section {
+    border-top: 1px solid #ddd;
+    margin-top: 6px;
+    padding-top: 4px;
+}
+.sub-section-title {
+    font-weight: bold;
+    font-size: 1em;
+    color: #444;
+    margin: 2px 0 4px 0;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.controls .force p {
+    margin: 0 0 4px 0;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-wrap: wrap;
+}
+
+.controls .force p label {
+    margin-right: .4em;
+    font-size: 115%;
+    font-weight: bold;
+}
+
+.controls .force > label {
+    display: block;
+    margin: 3px 0;
+}
+
+.controls input[type="checkbox"] {
+    transform: scale(1.2);
+    vertical-align: middle;
+}
+
+.controls input[type="range"] {
+    margin: 0 2% 4px 2%;
+    width: 96%;
+    display: block;
+}
+
+.controls select {
+    width: 100%;
+    margin-top: 2px;
+    font-size: 1em;
+    padding: 2px;
+}
+
+/* Alpha bar */
+.controls .alpha p { margin-bottom: .25em; }
+.controls .alpha .alpha-bar {
+    height: .5em;
+    border: 1px #777 solid;
+    border-radius: 2px;
+    padding: 1px;
+    display: flex;
+    cursor: pointer;
+}
+.controls .alpha .alpha-bar #alpha-value {
+    background-color: #555;
+    border-radius: 1px;
+    flex-basis: 100%;
+    transition: flex-basis 0.1s;
+}
+.controls .alpha .alpha-bar:hover { border-width: 2px; margin: -1px; }
+
+/* Status badge */
+.status-empty {
+    color: #999;
+    font-style: italic;
+    font-size: 0.95em;
+    padding: 3px 0 6px;
+}
+.status-loaded {
+    color: #2a7;
+    font-weight: bold;
+    padding: 3px 0 6px;
+}
+
+/* Buttons */
+.action-btn {
+    display: block;
+    width: 100%;
+    margin-top: 6px;
+    padding: 5px 8px;
+    border: none;
+    border-radius: 3px;
+    background: #4a8;
+    color: white;
+    font-size: 1em;
+    cursor: pointer;
+    font-weight: bold;
+    letter-spacing: 0.02em;
+}
+.action-btn:hover { background: #3a7; }
+.action-btn.secondary { background: #888; }
+.action-btn.secondary:hover { background: #666; }
+.action-btn:disabled { background: #bbb; cursor: not-allowed; }
+.action-btn.export { background: #5577aa; }
+.action-btn.export:hover { background: #446699; }
+
+/* Mode toggle buttons for tag weight */
+.mode-buttons {
+    display: flex;
+    gap: 3px;
+    margin-bottom: 6px;
+}
+.mode-btn {
+    flex: 1;
+    padding: 3px 4px;
+    border: 1px solid #aaa;
+    border-radius: 3px;
+    background: #ddd;
+    cursor: pointer;
+    font-size: 0.9em;
+}
+.mode-btn.active {
+    background: #4a8;
+    color: white;
+    border-color: #3a7;
+    font-weight: bold;
+}
+.mode-btn:hover:not(.active) { background: #ccc; }
+
+/* Cluster params */
+#cluster-params-ui label {
+    display: block;
+    margin: 4px 0 0;
+}
+#cluster-status {
+    margin-top: 5px;
+    font-size: 0.9em;
+    color: #555;
+    font-style: italic;
+}
+
+/* ── COURSE CHIPS ─────────────────────────────────── */
+.course-chips-wrap {
+    margin: 4px 0 2px;
+}
+.course-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-bottom: 3px;
+}
+.course-chip {
+    padding: 2px 9px;
+    border-radius: 10px;
+    font-size: 0.82em;
+    cursor: pointer;
+    border: 1px solid;
+    background: none;
+    font-family: inherit;
+    transition: background 0.12s, opacity 0.12s;
+    line-height: 1.5;
+}
+.course-chip.included {
+    background: #e6f5ee;
+    border-color: #4a8;
+    color: #1a5c38;
+}
+.course-chip.included:hover {
+    background: #cceedd;
+}
+.course-chip.excluded {
+    background: #eee;
+    border-color: #bbb;
+    color: #999;
+    text-decoration: line-through;
+    opacity: 0.7;
+}
+.course-chip.excluded:hover {
+    opacity: 1;
+    background: #ddd;
+}
+.chips-summary {
+    font-size: 0.8em;
+    color: #777;
+    margin-top: 2px;
+}
+.chips-reset {
+    color: #888;
+    text-decoration: underline;
+    cursor: pointer;
+}
+.chips-reset:hover { color: #444; }
+
+/* ── INFO TOGGLE ──────────────────────────────────── */
+.info-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    background: #aaa;
+    color: white;
+    font-size: 9px;
+    font-weight: bold;
+    cursor: pointer;
+    border: none;
+    padding: 0;
+    flex-shrink: 0;
+    line-height: 1;
+    font-family: serif;
+    font-style: italic;
+    user-select: none;
+    transition: background 0.15s;
+}
+.info-toggle:hover { background: #666; }
+.info-toggle.active { background: #4a8; }
+
+.info-panel {
+    display: none;
+    background: #fffdf0;
+    border: 1px solid #d8cc88;
+    border-radius: 4px;
+    padding: 6px 8px;
+    margin: 4px 0 6px;
+    font-size: 0.82em;
+    line-height: 1.5;
+    color: #443;
+}
+.info-panel.visible { display: block; }
+.info-panel dl { margin: 0; }
+.info-panel dt {
+    font-weight: bold;
+    color: #333;
+    margin-top: 4px;
+    font-size: 0.95em;
+}
+.info-panel dt:first-child { margin-top: 0; }
+.info-panel dd {
+    margin: 0 0 2px 8px;
+    color: #555;
+}
+
+/* ── EXPORT ───────────────────────────────────────── */
+#export-status {
+    display: none;
+    font-size: 0.85em;
+    color: #446;
+    font-style: italic;
+    margin-top: 3px;
+    padding: 2px 0;
+}
+
+/* ── GRAPH AREA ──────────────────────────────────── */
+#svg-wrapper {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+}
+
+#svg-container {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+}
+
+svg.networkx {
+    width: 100%;
+    height: 100%;
+}
+
+.node { cursor: pointer; }
+.node > text {
+    font-size: 9px;
+    fill: #111;
+    cursor: default;
+    pointer-events: none;
+}
+
+/* ── TOOLTIP ─────────────────────────────────────── */
+#tooltip {
+    position: fixed;
+    max-width: 320px;
+    padding: 10px 12px;
+    background: white;
+    border-radius: 6px;
+    box-shadow: 3px 3px 12px rgba(0,0,0,0.3);
+    pointer-events: none;
+    line-height: 1.5;
+    font-size: 0.85em;
+    z-index: 100;
+    display: none;
+}
+#tooltip strong { display: block; margin-bottom: 3px; font-size: 1.05em; }
+#tooltip .tt-desc { color: #222; }
+#tooltip .tt-tags { margin-top: 5px; color: #555; }
+#tooltip .tt-cluster { margin-top: 4px; font-weight: bold; color: #448; }
+
+/* ── LEGEND ──────────────────────────────────────── */
+.legend-group text {
+    font-size: 11px;
+    fill: #222;
+    dominant-baseline: central;
+}
+.legend-group .legend-title {
+    font-weight: bold;
+    font-size: 12px;
+    fill: #111;
+}
+.legend-bg {
+    fill: rgba(255,255,255,0.88);
+    stroke: #ccc;
+    rx: 5;
+    ry: 5;
+}
+
+/* ── DROP OVERLAY ────────────────────────────────── */
+#drop-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(60, 130, 90, 0.85);
+    z-index: 999;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    text-align: center;
+}
+#drop-overlay.visible { display: flex; }
+#drop-message { font-size: 2em; font-weight: bold; pointer-events: none; }
+#drop-icon { font-size: 3em; margin-bottom: 10px; }
+
+/* ── RESPONSIVE — mobile handled by sidebar toggle (see bottom of file) ───── */
+
+/* ── ALGORITHM OPTGROUPS ──────────────────────────────────────────────────── */
+#cluster-algo optgroup {
+    font-size: 0.85em;
+    color: #888;
+    font-style: normal;
+}
+#cluster-algo option {
+    font-size: 1em;
+    color: #333;
+    padding-left: 4px;
+}
+
+/* ── NOISE NODES (DBSCAN cluster = -1) ─────────────────────────────────────── */
+.node.noise .node-shape {
+    fill: #ccc !important;
+    stroke: #999 !important;
+    stroke-dasharray: 3 2;
+    opacity: 0.5;
+}
+.node.noise > text { fill: #aaa; }
+
+/* ── PARAMETER LABEL HOVER TIPS ─────────────────────────────────────────────── */
+.param-label-tip {
+    cursor: help;
+    border-bottom: 1px dotted #999;
+    text-decoration: none;
+}
+
+/* ── NODE SHAPE SELECTOR ─────────────────────────────────────────────────── */
+.shape-buttons {
+    display: flex;
+    gap: 3px;
+    margin: 3px 0 5px;
+    flex-wrap: wrap;
+}
+.shape-btn {
+    flex: 1;
+    min-width: 40px;
+    padding: 3px 2px;
+    border: 1px solid #aaa;
+    border-radius: 3px;
+    background: #ddd;
+    cursor: pointer;
+    font-size: 0.88em;
+    text-align: center;
+}
+.shape-btn.active {
+    background: #4a8;
+    color: white;
+    border-color: #3a7;
+    font-weight: bold;
+}
+.shape-btn:hover:not(.active) { background: #ccc; }
+
+/* ── SIDEBAR TOGGLE BUTTON ───────────────────────────────────────────────────
+   Fixed in the top-left corner at all times. Shows ☰ when sidebar is hidden,
+   ✕ when it is visible. On desktop the sidebar is a flex item so hiding it
+   naturally lets the graph fill the full width. On mobile it overlays.       */
+
+#sidebar-toggle {
+    position: fixed;
+    top: 8px;
+    left: 8px;
+    z-index: 200;
+    width: 32px;
+    height: 32px;
+    border: none;
+    border-radius: 6px;
+    background: #2a7a4f;
+    color: #fff;
+    font-size: 17px;
+    line-height: 32px;
+    text-align: center;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+    transition: background 0.15s, left 0.2s;
+    padding: 0;
+    flex-shrink: 0;
+}
+#sidebar-toggle:hover { background: #1f5e3b; }
+
+/* ── Desktop: sidebar is a flex item — hiding it frees the full width ──────── */
+body.sidebar-hidden .controls {
+    display: none;
+}
+/* When hidden, button stays at left edge */
+body.sidebar-hidden #sidebar-toggle {
+    left: 8px;
+    background: #2a7a4f;
+}
+
+/* ── Mobile (≤600px): sidebar overlays the graph ───────────────────────────── */
+@media (max-width: 600px) {
+    /* Override the old hard-hide rule — let JS/class control visibility */
+    .controls {
+        display: block;
+        position: fixed;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        z-index: 150;
+        width: 270px;
+        box-shadow: 4px 0 16px rgba(0,0,0,0.35);
+        transform: translateX(0);
+        transition: transform 0.2s ease;
+    }
+
+    /* Graph always fills full width on mobile */
+    #svg-wrapper {
+        position: fixed;
+        inset: 0;
+    }
+
+    /* Hidden state on mobile: slide sidebar off-screen */
+    body.sidebar-hidden .controls {
+        display: block;          /* keep in DOM for transition */
+        transform: translateX(-275px);
+    }
+
+    /* Toggle button: sits just right of the sidebar when open */
+    #sidebar-toggle {
+        left: 278px;
+        background: #2a7a4f;
+        transition: background 0.15s, left 0.2s;
+    }
+
+    /* When sidebar is hidden on mobile, button returns to left edge */
+    body.sidebar-hidden #sidebar-toggle {
+        left: 8px;
+    }
+
+    /* Dim overlay behind the sidebar when it is open on mobile */
+    body:not(.sidebar-hidden)::before {
+        content: '';
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.35);
+        z-index: 140;
+        pointer-events: none;
+    }
+}
