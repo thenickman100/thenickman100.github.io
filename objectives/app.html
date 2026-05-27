@@ -1,0 +1,517 @@
+<!-- index.html  v2.75 -->
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="./styles/stylesheet.v2.7.css">
+    <meta charset="UTF-8">
+    <title>USAFA Core Objectives</title>
+</head>
+<body>
+
+<!-- Drop Zone Overlay -->
+<div id="drop-overlay">
+    <div id="drop-message">
+        <div id="drop-icon">📄</div>
+        <div>Drop your CSV file here</div>
+        <div style="font-size:0.8em; margin-top:8px; opacity:0.7;">
+            Expected columns: Objective Description, Course Number, Skill Tags (pipe-delimited)
+        </div>
+    </div>
+</div>
+
+<!-- Sidebar toggle — collapses panel on all screen sizes, overlays on mobile -->
+<button id="sidebar-reopen" title="Open sidebar" onclick="toggleSidebar()">☰</button>
+
+<div class="controls" id="sidebar">
+
+    <!-- DATA LOADING — default open -->
+    <div class="force">
+        <div class="section-header" onclick="toggleSection(this)">
+            <label>data</label>
+            <span class="section-subtitle">load &amp; filter</span>
+            <button class="info-toggle" title="Show help"
+                onclick="event.stopPropagation(); toggleInfo(this)">i</button>
+            <span class="section-toggle-icon">▼</span>
+            <button id="sidebar-close" title="Close sidebar"
+                onclick="event.stopPropagation(); toggleSidebar()">✕</button>
+        </div>
+        <div class="section-body">
+            <div class="info-panel">
+                <dl>
+                    <dt>Loading data</dt>
+                    <dd>Drop any CSV file anywhere on the page. Columns are auto-detected by name (objective/description, course/number, tag/skill).</dd>
+                    <dt>Course exclusion</dt>
+                    <dd>Each badge below is a course. Click to toggle it <em>off</em> (excluded from the graph). The graph rebuilds instantly. Click again to restore it.</dd>
+                    <dt>Tags format</dt>
+                    <dd>Tags in the CSV must be pipe-delimited: <code>tag_a|tag_b|tag_c</code></dd>
+                </dl>
+            </div>
+            <div id="data-status" class="status-empty">No data loaded — drop a CSV file anywhere</div>
+            <div class="course-chips-wrap">
+                <div id="course-chips" class="course-chips"></div>
+                <div id="course-chips-summary" class="chips-summary"></div>
+            </div>
+            <button class="action-btn" onclick="rebuildAndDraw()">Rebuild Graph</button>
+        </div>
+    </div>
+
+    <!-- CLUSTERING — default open -->
+    <div class="force">
+        <div class="section-header" onclick="toggleSection(this)">
+            <label>clustering</label>
+            <span class="section-subtitle">group objectives</span>
+            <button class="info-toggle" title="Show help"
+                onclick="event.stopPropagation(); toggleInfo(this)">i</button>
+            <span class="section-toggle-icon">▼</span>
+        </div>
+        <div class="section-body">
+            <div class="info-panel">
+                <dl id="cluster-info-dl"><!-- populated by renderClusterParamsUI() --></dl>
+            </div>
+            <label>algorithm
+                <select id="cluster-algo" onchange="setClusterAlgorithm(this.value)">
+                    <optgroup label="▼ BY NETWORK CONNECTIONS">
+                        <option value="louvain" selected>Louvain</option>
+                        <option value="spectral">Spectral (NJW)</option>
+                        <option value="labelPropagation">Label Propagation</option>
+                    </optgroup>
+                    <option disabled>─────────────────────────</option>
+                    <optgroup label="▼ BY VISUAL LAYOUT">
+                        <option value="spatial">Spatial (x/y position)</option>
+                        <option value="hybrid">Hybrid (spatial + Jaccard)</option>
+                    </optgroup>
+                    <option disabled>─────────────────────────</option>
+                    <optgroup label="▼ BY SUBJECT MATTER (TAGS)">
+                        <option value="hierarchical">Agglomerative Hierarchical</option>
+                        <option value="dbscan">DBSCAN</option>
+                        <option value="kmeans">K-Means (tag vectors)</option>
+                        <option value="kmedoids">K-Medoids (PAM)</option>
+                        <option value="affinityProp">Affinity Propagation</option>
+                    </optgroup>
+                    <option disabled>─────────────────────────</option>
+                    <optgroup label="▼ BY COURSE METADATA">
+                        <option value="byCourse">By Course Number</option>
+                        <option value="byDepartment">By Department Prefix</option>
+                    </optgroup>
+                </select>
+            </label>
+            <div id="cluster-params-ui"></div>
+            <button class="action-btn" onclick="runClustering()">▶ Run Clustering</button>
+            <button class="action-btn secondary" onclick="clearClustering()">✕ Clear Clusters</button>
+            <div id="cluster-status"></div>
+        </div>
+    </div>
+
+
+    <!-- GRAPH DISPLAY — default collapsed -->
+    <div class="force">
+        <div class="section-header collapsed" onclick="toggleSection(this)">
+            <label>display</label>
+            <span class="section-subtitle">nodes, edges &amp; legend</span>
+            <button class="info-toggle" title="Show help"
+                onclick="event.stopPropagation(); toggleInfo(this)">i</button>
+            <span class="section-toggle-icon">▼</span>
+        </div>
+        <div class="section-body hidden">
+            <div class="info-panel">
+                <dl>
+                    <dt>Node radius</dt>
+                    <dd>Size of each node in pixels. Collision radius scales with this automatically.</dd>
+                    <dt>Node shape</dt>
+                    <dd>Visual shape only — physics treats every node as a circle regardless of shape. Legend swatches match the chosen shape.</dd>
+                    <dt>Edge width</dt>
+                    <dd>Baseline stroke width for edges.</dd>
+                    <dt>Edge opacity</dt>
+                    <dd>Base opacity for edges at median similarity. Weak edges scale lower, strong edges scale higher around this value.</dd>
+                    <dt>Label size / x offset</dt>
+                    <dd>Font size and horizontal nudge of the objective text label. Enable labels via the checkbox below.</dd>
+                    <dt>Rotation</dt>
+                    <dd>Rotates the entire graph around the canvas centre. Reset button returns to 0°.</dd>
+                    <dt>Legend settings</dt>
+                    <dd>Font size, row spacing, padding, and corner position of the cluster legend overlay.</dd>
+                </dl>
+            </div>
+
+            <!-- Nodes sub-section -->
+            <div class="sub-section">
+                <div class="sub-section-title">nodes</div>
+                <label><span class="param-label-tip" title="Size of each node in pixels. Collision radius scales automatically.">radius</span> <output id="node-radius">7</output>
+                    <input type="range" min="2" max="30" value="7" step="1"
+                        oninput="d3.select('#node-radius').text(value); displayProperties.node.radius=parseFloat(value); updateDisplay(0);">
+                </label>
+                <label style="margin-bottom:2px;">shape</label>
+                <div class="shape-buttons">
+                    <button class="shape-btn active" data-shape="circle"
+                        onclick="setNodeShape('circle', this)">● circle</button>
+                    <button class="shape-btn" data-shape="square"
+                        onclick="setNodeShape('square', this)">■ square</button>
+                    <button class="shape-btn" data-shape="hexagon"
+                        onclick="setNodeShape('hexagon', this)">⬢ hex</button>
+                    <button class="shape-btn" data-shape="triangle"
+                        onclick="setNodeShape('triangle', this)">▲ tri</button>
+                </div>
+                <label><input type="checkbox" id="show-labels-cb"
+                    onchange="displayProperties.node.showLabels=this.checked; updateDisplay(0);">
+                    show labels
+                </label>
+                <label><span class="param-label-tip" title="Font size of the objective text label.">label size</span> <output id="node-text-size">9</output>
+                    <input type="range" min="5" max="24" value="9" step="1"
+                        oninput="d3.select('#node-text-size').text(value); displayProperties.node.text_size=parseFloat(value); updateDisplay(0);">
+                </label>
+                <label><span class="param-label-tip" title="Horizontal nudge of the text label relative to the node centre.">label x offset</span> <output id="node-text-x-offset">10</output>
+                    <input type="range" min="-30" max="30" value="10" step="1"
+                        oninput="d3.select('#node-text-x-offset').text(value); displayProperties.node.x_offset=parseFloat(value); updateDisplay(0);">
+                </label>
+            </div>
+
+            <!-- Edges sub-section -->
+            <div class="sub-section">
+                <div class="sub-section-title">edges</div>
+                <label><span class="param-label-tip" title="Baseline stroke width for edges.">width</span> <output id="edge-width">1.0</output>
+                    <input type="range" min="0" max="8" value="1.0" step="0.25"
+                        oninput="d3.select('#edge-width').text(value); displayProperties.edge.width=parseFloat(value); updateDisplay(0);">
+                </label>
+                <label><span class="param-label-tip" title="Base opacity for edges at median similarity. Weak edges scale lower, strong edges scale higher.">opacity</span> <output id="edge-opacity">0.5</output>
+                    <input type="range" min="0.05" max="0.95" value="0.5" step="0.05"
+                        oninput="d3.select('#edge-opacity').text(parseFloat(value).toFixed(2)); displayProperties.edge.opacity=parseFloat(value); updateDisplay(0);">
+                </label>
+            </div>
+
+            <!-- Legend sub-section -->
+            <div class="sub-section">
+                <div class="sub-section-title">legend</div>
+                <label><input type="checkbox" id="show-legend-cb" checked
+                    onchange="displayProperties.legend.show=this.checked; updateLegend();">
+                    show legend
+                </label>
+                <label><input type="checkbox" id="show-legend-title-cb" checked
+                    onchange="displayProperties.legend.showTitle=this.checked; updateLegend();">
+                    show title
+                </label>
+                <input type="text" id="legend-title-input" placeholder="title (auto)"
+                    style="width:100%; margin-top:2px; font-size:0.9em; padding:2px 4px; box-sizing:border-box;"
+                    oninput="displayProperties.legend.customTitle=this.value.trim(); updateLegend();">
+                <label>position
+                    <select id="legend-position"
+                        onchange="displayProperties.legend.position=this.value; _legendFrac=null; updateLegend();">
+                        <option value="top-right" selected>top-right</option>
+                        <option value="top-left">top-left</option>
+                        <option value="bottom-right">bottom-right</option>
+                        <option value="bottom-left">bottom-left</option>
+                    </select>
+                </label>
+                <label><span class="param-label-tip" title="Font size of legend text.">font size</span> <output id="legend-text-size">11</output>
+                    <input type="range" min="7" max="20" value="11" step="1"
+                        oninput="d3.select('#legend-text-size').text(value); displayProperties.legend.text_size=parseFloat(value); updateLegend();">
+                </label>
+                <label><span class="param-label-tip" title="Vertical spacing between legend rows in pixels.">row spacing</span> <output id="legend-line-spacing">20</output>
+                    <input type="range" min="12" max="36" value="20" step="1"
+                        oninput="d3.select('#legend-line-spacing').text(value); displayProperties.legend.line_spacing=parseFloat(value); updateLegend();">
+                </label>
+                <label><span class="param-label-tip" title="Inner padding of the legend box in pixels.">padding</span> <output id="legend-padding">10</output>
+                    <input type="range" min="4" max="24" value="10" step="1"
+                        oninput="d3.select('#legend-padding').text(value); displayProperties.legend.padding=parseFloat(value); updateLegend();">
+                </label>
+            </div>
+
+            <!-- Rotation sub-section -->
+            <div class="sub-section">
+                <div class="sub-section-title">rotation</div>
+                <label>angle <output id="rotation-val">0</output>°
+                    <input type="range" id="rotation-angle" min="-180" max="180" value="0" step="1"
+                        oninput="d3.select('#rotation-val').text(value); applyRotation(parseFloat(value));">
+                </label>
+                <button class="action-btn secondary" style="margin-top:2px;font-size:0.85em;"
+                    onclick="applyRotation(0); document.getElementById('rotation-angle').value=0; document.getElementById('rotation-val').textContent='0';">
+                    ↺ Reset Rotation
+                </button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- EDGES — default collapsed -->
+    <div class="force">
+        <div class="section-header collapsed" onclick="toggleSection(this)">
+            <label>edges</label>
+            <span class="section-subtitle">selection &amp; strength</span>
+            <button class="info-toggle" title="Show help"
+                onclick="event.stopPropagation(); toggleInfo(this)">i</button>
+            <span class="section-toggle-icon">▼</span>
+        </div>
+        <div class="section-body hidden">
+            <div class="info-panel">
+                <dl>
+                    <dt>Similarity metric</dt>
+                    <dd>How tag overlap between two objectives is converted into a numeric edge weight (0–1). Higher = stronger, more opaque edge and stronger spring force.</dd>
+                    <dt>Jaccard</dt>
+                    <dd>|shared| / |total unique|. The standard balanced metric. Best general-purpose starting point.</dd>
+                    <dt>Dice</dt>
+                    <dd>2|shared| / (|A|+|B|). Weights shared tags more heavily — useful when the overlap itself matters most.</dd>
+                    <dt>Cosine</dt>
+                    <dd>|shared| / sqrt(|A|x|B|). Less sensitive to big differences in total tag count between objectives.</dd>
+                    <dt>Overlap</dt>
+                    <dd>|shared| / min(|A|,|B|). Fraction of the SMALLER tag set covered. A focused 3-tag objective sharing all its tags with a broad 20-tag one scores 1.0.</dd>
+                    <dt>Resource Allocation</dt>
+                    <dd>Sum of 1/degree(tag) for shared tags (normalised). Rare shared tags count far more than ubiquitous ones — surfaces niche thematic connections.</dd>
+                    <dt>Adamic-Adar</dt>
+                    <dd>Sum of 1/log(degree(tag)+1) for shared tags (normalised). Like Resource Allocation with a softer logarithmic penalty.</dd>
+                    <dt>kNN union / mutual / Threshold</dt>
+                    <dd>kNN union draws an edge if either node ranks the other in top-k. Mutual requires both. Threshold draws all edges at or above the similarity cutoff.</dd>
+                </dl>
+            </div>
+            <div id="edge-mode-ui"><!-- populated by renderEdgeUI() --></div>
+            <button class="action-btn" onclick="rebuildAndDraw()">Apply Edge Settings</button>
+        </div>
+    </div>
+
+    <!-- SIMULATION FORCES — default collapsed, groups collide/charge/link/alpha -->
+    <div class="force">
+        <div class="section-header collapsed" onclick="toggleSection(this)">
+            <label>simulation</label>
+            <span class="section-subtitle">forces &amp; physics</span>
+            <span class="section-toggle-icon">▼</span>
+        </div>
+        <div class="section-body hidden">
+
+            <!-- Alpha -->
+            <div class="sub-section alpha" style="margin-top:0; border-top:none; padding-top:0;">
+                <div class="sub-section-title">
+                    <input type="checkbox" id="alpha-enabled" checked
+                        onchange="forceProperties.alpha.enabled = this.checked; initializeForces(); restartSimulation();"
+                        onclick="event.stopPropagation()">
+                    alpha — simulation activity
+                    <button class="info-toggle" title="Show help"
+                        onclick="event.stopPropagation(); toggleInfo(this)">i</button>
+                </div>
+                <div class="info-panel">
+                    <dl>
+                        <dt>What is alpha?</dt>
+                        <dd>Think of it as the simulation's "temperature." High alpha = nodes moving rapidly toward their equilibrium. As alpha decays to zero the layout freezes.</dd>
+                        <dt>Alpha bar</dt>
+                        <dd>The bar shows the current alpha level. Click it to snap alpha to zero and instantly freeze the layout.</dd>
+                        <dt>Checkbox</dt>
+                        <dd>Unchecking disables alpha decay, locking the simulation at its current energy indefinitely.</dd>
+                    </dl>
+                </div>
+                <div class="alpha-bar" onclick="updateAll(0);">
+                    <div id="alpha-value"></div>
+                </div>
+            </div>
+
+            <!-- Collide -->
+            <div class="sub-section">
+                <div class="sub-section-title">
+                    <input type="checkbox" id="collide-enabled" checked
+                        onchange="forceProperties.collide.enabled = this.checked; updateForces(); restartSimulation();"
+                        onclick="event.stopPropagation()">
+                    collide — prevent overlap
+                    <button class="info-toggle" title="Show help"
+                        onclick="event.stopPropagation(); toggleInfo(this)">i</button>
+                </div>
+                <div class="info-panel">
+                    <dl>
+                        <dt>Strength (0–1)</dt>
+                        <dd>How aggressively nodes push each other apart. 0 = off, 1 = full separation enforced every tick.</dd>
+                        <dt>Radius (rel)</dt>
+                        <dd>Collision radius as a multiple of node radius. 1.0 = nodes just touch. 2.0 = nodes keep a full-radius gap between them.</dd>
+                        <dt>Iterations</dt>
+                        <dd>How many collision-resolution passes happen each tick. More iterations = tighter overlap prevention but slower simulation.</dd>
+                    </dl>
+                </div>
+                <label><span class="param-label-tip" title="How aggressively nodes push each other apart.">strength</span> <output id="collide-strength">0.8</output>
+                    <input type="range" min="0" max="1" value="0.8" step="0.1"
+                        oninput="d3.select('#collide-strength').text(value); forceProperties.collide.strength=parseFloat(value); updateForces(); restartSimulation();">
+                </label>
+                <label><span class="param-label-tip" title="Collision radius as a multiple of node radius.">radius (rel)</span> <output id="collide-rel-radius">0.9</output>
+                    <input type="range" min="0" max="5" value="0.9" step="0.1"
+                        oninput="d3.select('#collide-rel-radius').text(value); forceProperties.collide.relativeRadius=parseFloat(value); updateForces(); restartSimulation();">
+                </label>
+                <label><span class="param-label-tip" title="How many collision-resolution passes happen each tick.">iterations</span> <output id="collide-iterations">2</output>
+                    <input type="range" min="1" max="10" value="2" step="1"
+                        oninput="d3.select('#collide-iterations').text(value); forceProperties.collide.iterations=parseFloat(value); updateForces(); restartSimulation();">
+                </label>
+            </div>
+
+            <!-- Charge -->
+            <div class="sub-section">
+                <div class="sub-section-title">
+                    <input type="checkbox" id="charge-enabled" checked
+                        onchange="forceProperties.charge.enabled = this.checked; updateForces(); restartSimulation();"
+                        onclick="event.stopPropagation()">
+                    charge — attract / repel
+                    <button class="info-toggle" title="Show help"
+                        onclick="event.stopPropagation(); toggleInfo(this)">i</button>
+                </div>
+                <div class="info-panel">
+                    <dl>
+                        <dt>Strength</dt>
+                        <dd>Negative values repel nodes (default: −30). Positive values attract all nodes toward each other like gravity.</dd>
+                        <dt>Distance min</dt>
+                        <dd>Prevents extreme forces when two nodes are nearly on top of each other.</dd>
+                        <dt>Distance max</dt>
+                        <dd>Charge force is ignored beyond this radius. Lower = more local feel; higher = stronger global spreading effect.</dd>
+                    </dl>
+                </div>
+                <label><span class="param-label-tip" title="Negative values repel nodes. Positive values attract all nodes.">strength</span> <output id="charge-strength">-30</output>
+                    <input type="range" min="-500" max="50" value="-30" step="5"
+                        oninput="d3.select('#charge-strength').text(value); forceProperties.charge.strength=parseFloat(value); updateForces(); restartSimulation();">
+                </label>
+                <label><span class="param-label-tip" title="Prevents extreme forces when nodes overlap.">distanceMin</span> <output id="charge-min-distance">1</output>
+                    <input type="range" min="0" max="50" value="1" step="0.5"
+                        oninput="d3.select('#charge-min-distance').text(value); forceProperties.charge.distanceMin=parseFloat(value); updateForces(); restartSimulation();">
+                </label>
+                <label><span class="param-label-tip" title="Charge force is ignored beyond this radius.">distanceMax</span> <output id="charge-max-distance">200</output>
+                    <input type="range" min="0" max="500" value="200" step="5"
+                        oninput="d3.select('#charge-max-distance').text(value); forceProperties.charge.distanceMax=parseFloat(value); updateForces(); restartSimulation();">
+                </label>
+            </div>
+
+            <!-- Link -->
+            <div class="sub-section">
+                <div class="sub-section-title">
+                    <input type="checkbox" id="link-enabled" checked
+                        onchange="forceProperties.link.enabled = this.checked; updateForces(); restartSimulation();"
+                        onclick="event.stopPropagation()">
+                    link — edge spring forces
+                    <button class="info-toggle" title="Show help"
+                        onclick="event.stopPropagation(); toggleInfo(this)">i</button>
+                </div>
+                <div class="info-panel">
+                    <dl>
+                        <dt>Base strength</dt>
+                        <dd>How firmly edges enforce their target length. Strength scales with similarity, so strongly-similar pairs pull harder.</dd>
+                        <dt>Base distance</dt>
+                        <dd>The rest length for low-similarity edges. High-similarity pairs automatically get a shorter rest length (≥10 px).</dd>
+                        <dt>Iterations</dt>
+                        <dd>Number of constraint-solving passes per tick. More iterations = stricter link lengths, at the cost of simulation speed.</dd>
+                    </dl>
+                </div>
+                <label><span class="param-label-tip" title="How firmly edges enforce their target length.">base strength</span> <output id="link-strength">1.0</output>
+                    <input type="range" min="0" max="2" value="1.0" step="0.05"
+                        oninput="d3.select('#link-strength').text(value); forceProperties.link.strength=parseFloat(value); updateForces(); restartSimulation();">
+                </label>
+                <label><span class="param-label-tip" title="Rest length for low-similarity edges.">base distance</span> <output id="link-distance">0</output>
+                    <input type="range" min="0" max="400" value="0" step="5"
+                        oninput="d3.select('#link-distance').text(value); forceProperties.link.distance=parseFloat(value); updateForces(); restartSimulation();">
+                </label>
+                <label><span class="param-label-tip" title="Number of constraint-solving passes per tick.">iterations</span> <output id="link-iterations">2</output>
+                    <input type="range" min="1" max="10" value="2" step="1"
+                        oninput="d3.select('#link-iterations').text(value); forceProperties.link.iterations=parseFloat(value); updateForces(); restartSimulation();">
+                </label>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- EXPORT — default collapsed -->
+    <div class="force" style="background:#eef3ff; border:1px solid #c8d4f0;">
+        <div class="section-header collapsed" onclick="toggleSection(this)"
+             style="background:#eef3ff;">
+            <label>export</label>
+            <span class="section-subtitle">share current state</span>
+            <span class="section-toggle-icon">▼</span>
+        </div>
+        <div class="section-body hidden" style="background:#eef3ff;">
+            <div style="font-size:0.82em; color:#556; line-height:1.4; margin-bottom:6px;">
+                Bundles the graph, all settings, node positions, and clustering into a single standalone HTML file.
+                The recipient can open it offline — no server needed after download.
+            </div>
+            <label style="display:block; margin-bottom:5px;">
+                filename
+                <div style="display:flex; align-items:center; gap:4px; margin-top:2px;">
+                    <input type="text" id="export-filename"
+                           style="flex:1; font-size:0.95em; padding:3px 5px; font-family:monospace; border:1px solid #b0b8d0; border-radius:3px;"
+                           placeholder="202605221244">
+                    <span style="font-size:0.85em; color:#778; white-space:nowrap;">.html</span>
+                </div>
+            </label>
+            <button class="action-btn export" onclick="exportState()">⬇ Export to HTML</button>
+            <div id="export-status"></div>
+        </div>
+    </div>
+
+</div>
+
+<div id="svg-wrapper">
+    <div id="svg-container">
+        <svg class="networkx"></svg>
+    </div>
+</div>
+
+<!-- Script load order matters: dependencies first -->
+<script src="./files/jquery.v3.7.1.js"></script>
+<script src="./files/d3.v7.9.0.js"></script>
+<script src="./scripts/color_palettes.v1.2.js"></script>
+<script src="./scripts/data_loader.v2.2.js"></script>
+<script src="./scripts/similarity.v2.2.js"></script>
+<script src="./scripts/clustering.v2.20.js"></script>
+<script src="./scripts/network_graph.v3.9.js"></script>
+<script src="./scripts/display_graph.v2.65.js"></script>
+
+<script id="main-inline-script">
+// ── Sidebar toggle ────────────────────────────────────────────────────────────
+
+function toggleSidebar() {
+    document.body.classList.toggle('sidebar-hidden');
+    if (typeof updateLegend === 'function') updateLegend();
+}
+
+// ── Section collapse toggle ───────────────────────────────────────────────────
+
+function toggleSection(header) {
+    header.classList.toggle('collapsed');
+    const body = header.nextElementSibling;
+    if (body && body.classList.contains('section-body')) {
+        body.classList.toggle('hidden');
+    }
+}
+
+// ── Info panel toggle ─────────────────────────────────────────────────────────
+
+function toggleInfo(btn) {
+    const panel = btn.closest('.force').querySelector('.info-panel');
+    if (!panel) return;
+    const isVisible = panel.classList.toggle('visible');
+    btn.classList.toggle('active', isVisible);
+}
+
+// ── Node shape selector ───────────────────────────────────────────────────────
+
+function setNodeShape(shape, btn) {
+    displayProperties.node.shape = shape;
+    document.querySelectorAll('.shape-btn').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    // Rebuild node features so shape path is recreated (not just updated)
+    if (node) {
+        node_dots.remove();
+        node_text.remove();
+        createNodeFeatures();
+        draghandler.call(draghandler, node);
+    }
+    updateDisplay(0);
+    updateLegend();
+}
+
+// ── DOMContentLoaded ──────────────────────────────────────────────────────────
+
+document.addEventListener('DOMContentLoaded', () => {
+    // On mobile, start with sidebar hidden so the graph is immediately visible.
+    if (window.matchMedia('(max-width: 600px)').matches) {
+        document.body.classList.add('sidebar-hidden');
+    }
+
+    updateDimensions();
+    setupDropZone();
+    renderClusterParamsUI();
+    renderEdgeUI();
+
+    // Restore exported state if present
+    if (window.__EXPORTED_STATE__) {
+        restoreExportedState(window.__EXPORTED_STATE__);
+    }
+});
+</script>
+
+</body>
+</html>
