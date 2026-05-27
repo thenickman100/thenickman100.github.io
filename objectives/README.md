@@ -1,6 +1,6 @@
 # Objective Network Analyzer
 
-**[Live Demo](clustering-demo-202605261552.html)**
+**[Live Demo](clustering-demo-202605261911.html)**
 
 A browser-based tool for visualizing and analyzing curriculum learning objectives as an interactive force-directed network. Objectives are connected by tag-based similarity and can be grouped using a variety of clustering algorithms.
 
